@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okinawa 2026｜11人的美好時光</title>
+    <style>
+        /* =========================================
+           1. 基礎設定與字體
+           ========================================= */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        /* =========================================
+           2. 視差滾動區塊 (Parallax Hero)
+           ========================================= */
+        .parallax-section {
+            background-image: url('./image/a1.jpg');
+            height: 100vh; 
+            background-attachment: fixed; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .parallax-section::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4); 
+            z-index: 1;
+        }
+
+        .title-text {
+            z-index: 2;
+            font-size: 4rem;
+            font-weight: bold;
+            text-shadow: 2px 4px 12px rgba(0,0,0,0.8);
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        
+        .subtitle-text {
+            z-index: 2;
+            font-size: 1.5rem;
+            margin-top: 10px;
+            text-shadow: 1px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        /* =========================================
+           3. 交錯式相簿排版 (Album Timeline)
+           ========================================= */
+        .timeline-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+
+        .day-row {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            margin-bottom: 120px;
+        }
+
+        .day-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .day-image-wrapper {
+            flex: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .day-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .day-image-wrapper:hover img {
+            transform: scale(1.05);
+        }
+
+        .day-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .day-text h2 {
+            font-size: 2.2rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .day-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #ccc;
+            margin-bottom: 25px;
+        }
+
+        /* 質感相簿按鈕 */
+        .album-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: transparent;
+            color: #f5f5f5;
+            text-decoration: none;
+            font-size: 1rem;
+            border: 2px solid #e74c3c;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .album-btn:hover {
+            background-color: #e74c3c;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        /* 手機版響應式設定 */
+        @media (max-width: 768px) {
+            .day-row, .day-row:nth-child(even) {
+                flex-direction: column;
+                text-align: center;
+                gap: 30px;
+            }
+            .day-text {
+                text-align: center;
+            }
+            .day-text h2 {
+                display: block;
+                border-bottom: none;
+            }
+        }
+
+        /* =========================================
+           4. 滾動浮現特效 (Intersection Observer)
+           ========================================= */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(40px);
+            visibility: hidden;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            will-change: opacity, visibility;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: none;
+            visibility: visible;
+        }
+        
+        .delay-1 { transition-delay: 0.2s; }
+        .delay-2 { transition-delay: 0.4s; }
+
+        /* =========================================
+           5. 黑膠唱片音樂播放器
+           ========================================= */
+        .vinyl-player {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #111;
+            border: 3px solid #444;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spin 3.5s linear infinite;
+            animation-play-state: paused; 
+            transition: transform 0.2s;
+        }
+
+        .vinyl-player:hover {
+            transform: scale(1.1);
+        }
+
+        .vinyl-player::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            background: #e74c3c;
+            border-radius: 50%;
+        }
+
+        .playing {
+            animation-play-state: running;
+            border-color: #e74c3c;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 頁尾結語區塊 */
+        .footer-section {
+            text-align: center;
+            padding: 80px 20px;
+            background-color: #111;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" loop>
+        <source src="./jazz-bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="vinyl-player" id="vinylBtn" title="點擊播放/暫停背景音樂"></div>
+
+    <div class="parallax-section">
+        <div style="z-index: 2;">
+            <h1 class="title-text fade-in-section is-visible">Okinawa 2026</h1>
+            <p class="subtitle-text fade-in-section delay-1 is-visible">5.21 - 5.27 ｜ 11個人的美好時光</p>
+        </div>
+    </div>
+
+    <div class="timeline-container">
+        
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day1.jpg" alt="Day 1" onerror="this.src='./image/go-Okinawa.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 1: 抵達那霸</h2>
+                <p>11個人的大陣仗順利降落！這是第一次在日本的自駕，由幸萱和懷仁主駕，幸宜和國泰副駕。這一天的晚餐，是我們在當地的超市採買，回到房間內料理，是母親最愛的一餐！</p>
+                <a href="https://photos.app.goo.gl/z5ob7Ysz86i74AjF6" target="_blank" class="album-btn">打開 Day 1 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day2.jpg" alt="Day 2" onerror="this.src='./image/day-2_pre.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 2: 美麗海水族館</h2>
+                <p>這一天下著小雨，我們往上走，經過萬座毛，接著來到美麗海水族館！雖然是下雨天，小朋友的活力還是100%。晚上我們選了一間飯店附近的燒肉吃到飽，也是極推的一家店。</p>
+                <a href="https://photos.app.goo.gl/7rAisT5S5Pr4FCXp7" target="_blank" class="album-btn">打開 Day 2 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day3.jpg" alt="Day 3" onerror="this.src='./image/day-3_pre.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 3: 室內遊樂場</h2>
+                <p>一票玩到底的室內遊戲館，小孩子們的天堂。</p>
+                <a href="https://photos.app.goo.gl/K3PdpgrVXCJDDRLU6" target="_blank" class="album-btn">打開 Day 3 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day4.jpg" alt="Day 4" onerror="this.src='./image/day-4_pre.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 4: 白天吃泊港，晚上邀東南植物園</h2>
+                <p>讓我們趕上植物園夜光燈秀的最後一天，開心。</p>
+                <a href="https://photos.app.goo.gl/espCDcvwmJ76FbAd7" target="_blank" class="album-btn">打開 Day 4 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day5.jpg" alt="Day 5" onerror="this.src='./image/day-5_pre.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 5: 白天牧志市場，晚上國際通</h2>
+                <p>我們來到那霸市區，轉換行動方式，一步一腳印。</p>
+                <a href="https://photos.app.goo.gl/XGDUpNxt7svm1mbB7" target="_blank" class="album-btn">打開 Day 5 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day6.jpg" alt="Day 6" onerror="this.src='./image/day-6_pre.gif'">
+            </div>
+            <div class="day-text">
+                <h2>Day 6: 早餐吃了飯團捲，接著下午進飯店的泳池玩耍</h2>
+                <p>阿睿思思念念的游泳池，這一天，我們還遇到阮經天。</p>
+                <a href="https://photos.app.goo.gl/fq9LT7qd7Fxa9Z9H6" target="_blank" class="album-btn">打開 Day 6 相簿</a>
+            </div>
+        </div>
+
+        <div class="day-row fade-in-section">
+            <div class="day-image-wrapper">
+                <img src="./okinawa-day7.jpg" alt="Day 7" onerror="this.src='./image/day-7_pre.jpg'">
+            </div>
+            <div class="day-text">
+                <h2>Day 7: 滿載而歸</h2>
+                <p>帶著裝不下的行李廂與滿滿的回憶前往那霸機場。七天的時間實在過得太快，期待我們下一次的家族大旅行！</p>
+                <a href="https://photos.app.goo.gl/wVHkRZKHRDkvSP1Z7" target="_blank" class="album-btn">打開 Day 7 相簿</a>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="footer-section">
+        <h2 class="fade-in-section" style="color: #fff; margin-bottom: 20px;">回憶無價</h2>
+        <p class="fade-in-section delay-1" style="color: #888; font-size: 0.9rem;">Made with ❤️ for the 11 travelers</p>
+    </div>
+
+    <script>
+        // 黑膠音樂播放器邏輯
+        const vinylBtn = document.getElementById('vinylBtn');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = false;
+
+        vinylBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                bgm.pause();
+                vinylBtn.classList.remove('playing');
+            } else {
+                bgm.play();
+                vinylBtn.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // 滾動浮現監聽器 (Intersection Observer)
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-section').forEach((element) => {
+            observer.observe(element);
+        });
+    </script>
+</body>
+</html>
