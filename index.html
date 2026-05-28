@@ -228,7 +228,7 @@
 </head>
 <body>
 
-    <audio id="bgm" loop>
+    <audio id="bgm" loop autoplay>
         <source src="./sound/mixkit-beautiful-dream-493.mp3" type="audio/mpeg">
     </audio>
 
@@ -328,12 +328,43 @@
     </div>
 
     <script>
-        // 黑膠音樂播放器邏輯
         const vinylBtn = document.getElementById('vinylBtn');
         const bgm = document.getElementById('bgm');
         let isPlaying = false;
 
-        vinylBtn.addEventListener('click', () => {
+        // 核心功能：啟動音樂與黑膠動畫
+        function playMusic() {
+            if (!isPlaying) {
+                bgm.play().then(() => {
+                    isPlaying = true;
+                    vinylBtn.classList.add('playing');
+                }).catch(error => {
+                    console.log("立刻播放被瀏覽器攔截，等待使用者點擊或捲動網頁時啟動。");
+                });
+            }
+        }
+
+        // 1. 頁面一載入就嘗試播放
+        window.addEventListener('DOMContentLoaded', () => {
+            playMusic();
+            
+            // 2. 觸發降級備用方案：監聽親友的第一次點擊、螢幕觸控、或是滑動捲動
+            const unlockAutoplay = () => {
+                playMusic();
+                // 成功啟動後解除監聽，避免重複執行
+                document.removeEventListener('click', unlockAutoplay);
+                document.removeEventListener('touchstart', unlockAutoplay);
+                document.removeEventListener('scroll', unlockAutoplay);
+            };
+
+            document.addEventListener('click', unlockAutoplay);
+            document.addEventListener('touchstart', unlockAutoplay);
+            document.addEventListener('scroll', unlockAutoplay);
+        });
+
+        // 3. 手動點擊右下角黑膠唱片的開關邏輯 (需阻斷冒泡以免觸發 document 的監聽)
+        vinylBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
             if (isPlaying) {
                 bgm.pause();
                 vinylBtn.classList.remove('playing');
@@ -344,7 +375,7 @@
             isPlaying = !isPlaying;
         });
 
-        // 滾動浮現監聽器 (Intersection Observer)
+        // 4. 滾動浮現監聽器 (Intersection Observer)
         const observerOptions = {
             root: null,
             rootMargin: '0px',
